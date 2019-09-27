@@ -1,5 +1,43 @@
 # CryptoPandas Birthing Process
 
+## Permissioned version (non-custodial)
+1. The user selects two pandas of opposite gender from their wallet and sends their transaction hashes to the backend, as well as a non-slp UTXO for fees and a name for the child panda.
+2. The backend prepares an unsigned (non-SLP) transaction that contains the following outputs and sends the preimage to the frontend:
+    1. An OP_RETURN with the following fields:
+        1. lokad id: PND1
+        2. the father transaction hash (note: not token id)
+        3. the mother transaction hash
+        4. public key for father and mother
+        5. a signature with the public key for the message "PANDA S3X:{father tokenid}+{mother tokenid}"
+    2. A P2PKH with the address of the operators of CryptoPandas of 0.001 BCH.
+    3. Any change back to the user's wallet.
+3. The frontend signs the preimage and sends the signature to the backend.
+4. The backend verifies the signature, completes the PND1 transaction with the signature and broadcasts it on the network.
+5. The backend waits until the PND1 transaction confirmed.
+6. After the PND1 transaction has been mined, the genome of the new panda is determined. It’s the result of gene swapping and random mutation based on the blockhash of the block containing the fertilizing transaction and the transaction hash of the PND1 transaction.
+7. The backend prepares a SLP NFT1 transaction with the following inputs and outputs:
+    * Inputs:
+        1. An SLP NFT1 parent token (0x81) owned exlusively by CryptoPandas.
+        2. The fee output of the PND1 transaction (for easier external verification).
+        3. Any additional input required for fees/combining inputs (likely none).
+    * Outputs:
+        1. The SLP NFT1 OP_RETURN output with the following fields:
+            1. lokad id: SLP\0
+            2. token type: 0x41
+            3. transaction type: GENESIS
+            4. token ticker: PANDA
+            5. token name: {name of the child panda}
+            6. token document url: https://pand.as.cash/panda/{panda_genome_hex} !TBD!
+            7. token document hash: !TBD!
+            8. decimals: 0
+            9. mint_baton_vout: {empty string}
+            10. initial_token_mint_quantity: 1
+        2. P2PKH output with the address of the user
+        3. Any change back to CryptoPanda's wallet.
+8. The backend broadcasts the SLP NFT1 transaction and updates its UTXO set.
+
+## Permissionless version (not required for the hackathon)
+
 The technical process looks as follows (review SLP NFT1 specification for SLP details):
 1. The user selects two pandas of opposite gender from their wallet
 2. The app creates two DNA transactions for each panda, where the panda is both kept alive as new output (usually, procreation doesn’t result in death) and where a DNA baton output is created that will be consumed in a fertilizing transaction
